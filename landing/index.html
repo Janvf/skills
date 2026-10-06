@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rivl</title>
+<meta name="description" content="Rivl shows every Meta ad your competitors are running, which ones they keep paying for, and the hooks behind them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one centred column. The hero ends in a fanned hand of Meta ads (the competitor's "deck"),
+   then a calm product walk-through: proof row → live preview → 3 steps → pricing → FAQ. */
+:root {
+  --paper: #F4F5F7;
+  --surface: #FFFFFF;
+  --ink: #0F1013;
+  --muted: #5D626D;
+  --line: #E1E3E8;
+  --accent: #FF5B14;      /* "signal orange": the one loud colour, used sparingly */
+  --accent-soft: #FFE6DA;
+  --glass: rgba(255, 255, 255, .78);
+  --shadow: 0 1px 2px rgba(15, 16, 19, .06), 0 12px 32px -12px rgba(15, 16, 19, .22);
+
+  --f-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --gutter: clamp(16px, 4vw, 40px);
+  --max: 1160px;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0C0D10; --surface: #16181D; --ink: #F1F2F4; --muted: #9A9FAA; --line: #262930;
+    --accent: #FF6A2B; --accent-soft: #3A1D10; --glass: rgba(22, 24, 29, .8);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 14px 36px -12px rgba(0, 0, 0, .7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0C0D10; --surface: #16181D; --ink: #F1F2F4; --muted: #9A9FAA; --line: #262930;
+  --accent: #FF6A2B; --accent-soft: #3A1D10; --glass: rgba(22, 24, 29, .8);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 14px 36px -12px rgba(0, 0, 0, .7);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+img, svg { max-width: 100%; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+.eyebrow {
+  font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(2rem, 4.6vw, 3.25rem); font-weight: 800; line-height: 1; letter-spacing: -.035em; }
+h3 { font-size: 1.25rem; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 1.125rem; max-width: 34rem; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 48px; padding-inline: 22px 8px; border-radius: 999px; border: 0;
+  background: var(--ink); color: var(--paper);
+  font: 600 15px/1 var(--f-body); text-decoration: none; cursor: pointer;
+  transition: transform .2s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn .arrow {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: #fff; transition: transform .2s ease;
+}
+.btn:hover .arrow { transform: translateX(2px); }
+.btn.ghost { background: transparent; color: var(--ink); padding-inline: 16px; box-shadow: inset 0 0 0 1px var(--line); }
+.btn.sm { height: 40px; padding-inline: 16px; font-size: 14px; }
+
+/* ---------- Nav ---------- */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px);
+}
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 68px; }
+.logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; font: 800 24px/1 var(--f-display); letter-spacing: -.05em; }
+.logo svg { width: 26px; height: 26px; }
+.nav-links { display: flex; gap: 24px; margin-left: auto; }
+.nav-links a { text-decoration: none; color: var(--muted); font-size: 14.5px; font-weight: 500; }
+.nav-links a:hover { color: var(--ink); }
+.nav-cta { display: flex; gap: 8px; }
+@media (max-width: 760px) {
+  .nav-links, .nav .ghost { display: none; }
+  .nav-cta { margin-left: auto; }
+}
+
+/* ---------- Hero ---------- */
+.hero { padding-top: clamp(48px, 9vw, 104px); text-align: center; overflow-x: clip; }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 13px; color: var(--muted); font-weight: 500;
+}
+.pill b { background: var(--accent-soft); color: var(--accent); padding: 3px 8px; border-radius: 999px; font: 500 11px/1.2 var(--f-mono); letter-spacing: .04em; }
+.hero h1 {
+  margin: 26px auto 0; max-width: 15ch;
+  font-size: clamp(2.75rem, 8.4vw, 6.4rem); font-weight: 800; line-height: .92; letter-spacing: -.055em;
+}
+/* the little ad card that sits inside the headline */
+.inline-ad {
+  display: inline-block; vertical-align: -.06em; width: .72em; height: .9em; margin-inline: .06em;
+  border-radius: .1em; transform: rotate(-8deg); box-shadow: var(--shadow);
+  background:
+    radial-gradient(circle at 50% 42%, #FFD25E 0 22%, transparent 23%),
+    linear-gradient(180deg, #FF8A5B 0 62%, #FF5B14 62% 100%);
+  position: relative; overflow: hidden;
+}
+.inline-ad::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 12%; height: 6%; border-radius: 9px; background: rgba(255,255,255,.85); }
+.hero .lede { margin: 22px auto 0; text-align: center; }
+
+.search {
+  display: flex; align-items: center; gap: 8px; margin: 34px auto 0; max-width: 560px;
+  padding: 6px; border-radius: 999px; background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+}
+.search:focus-within { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow); }
+.search svg { flex: none; margin-left: 14px; color: var(--muted); }
+.search input {
+  flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; color: var(--ink);
+  font: 500 16px var(--f-body); outline: none;
+}
+.search input::placeholder { color: var(--muted); }
+.try { margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
+.try button {
+  font: 500 13px var(--f-body); color: var(--ink); background: transparent; border: 1px dashed var(--line);
+  border-radius: 999px; padding: 4px 11px; cursor: pointer;
+}
+.try button:hover { border-style: solid; border-color: var(--ink); }
+@media (max-width: 520px) {
+  .search { flex-wrap: wrap; border-radius: 22px; }
+  .search .btn { width: 100%; justify-content: space-between; }
+}
+
+/* The fan: cards pivot around a point far below the hero, so rotation alone lays them on an arc. */
+.fan {
+  --cw: 214px; --pivot: 1150px; --step: 8.5deg;
+  position: relative; height: 420px; margin-top: 56px;
+  -webkit-mask-image: linear-gradient(#000 72%, transparent);
+          mask-image: linear-gradient(#000 72%, transparent);
+}
+.ad {
+  position: absolute; left: 50%; top: 34px; width: var(--cw); margin-left: calc(var(--cw) / -2);
+  transform-origin: 50% var(--pivot);
+  rotate: calc(var(--i) * var(--step));
+  z-index: var(--z);
+  background: var(--surface); border-radius: 16px; padding: 10px; text-align: left;
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+  transition: translate .3s cubic-bezier(.2,.8,.2,1);
+  animation: deal 1.1s cubic-bezier(.2,.8,.2,1) both;
+}
+.ad:hover { translate: 0 -18px; }
+@keyframes deal { from { rotate: 0deg; } }
+.ad header { display: flex; align-items: center; gap: 8px; padding: 2px 2px 10px; }
+.av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--f-display); color: #fff; flex: none; }
+.ad header b { display: block; font-size: 12.5px; line-height: 1.1; }
+.ad header small { display: block; font-size: 11px; color: var(--muted); line-height: 1.3; }
+.cr {
+  aspect-ratio: 4 / 5; max-width: 100%; border-radius: 10px; position: relative; overflow: hidden;
+  display: flex; align-items: flex-end; padding: 14px;
+  font: 800 22px/1 var(--f-display); letter-spacing: -.035em;
+}
+.ad footer { display: flex; justify-content: space-between; gap: 6px; padding: 10px 2px 2px; font: 500 11px var(--f-mono); color: var(--muted); }
+.ad footer .hot { color: var(--accent); }
+.sticker {
+  position: absolute; top: -14px; right: -18px; z-index: 2;
+  padding: 7px 11px; border-radius: 10px; background: var(--glass);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+  font: 500 11.5px/1.25 var(--f-mono); color: var(--ink); rotate: 6deg; white-space: nowrap;
+}
+.sticker i { font-style: normal; color: var(--accent); }
+
+/* Ad creatives: each is its own little "image", so it sets its own colours. */
+.cr-paloma  { background: radial-gradient(circle at 70% 30%, #FFE08A 0 16%, transparent 17%), linear-gradient(180deg, #FF9C7A, #FF5B6E); color: #fff; }
+.cr-moss    { background: #DCEBDD; color: #173A22; }
+.cr-moss::before { content: ""; position: absolute; width: 70%; height: 55%; left: 22%; top: 10%; background: #3E8A52; border-radius: 0 100% 0 100%; rotate: -18deg; }
+.cr-moss::after  { content: ""; position: absolute; width: 2px; height: 40%; left: 50%; top: 38%; background: #173A22; rotate: 30deg; }
+.cr-ferro   { background: #15171C; color: #F2F2F2; font-style: italic; }
+.cr-ferro::before { content: ""; position: absolute; inset: 22% -20% auto -20%; height: 34%; border-top: 3px solid #FF5B14; border-radius: 50%; }
+.cr-lumen   { background: radial-gradient(circle at 35% 35%, #fff 0 6%, transparent 7%), radial-gradient(circle at 45% 45%, #FF7AB8 0 26%, #E3157B 40%, transparent 41%), linear-gradient(160deg, #FFE1EE, #FFC4DD); color: #5A0430; }
+.cr-tide    { background: linear-gradient(180deg, #FFB547 0 55%, #F2E6D3 55%); color: #3A1F06; }
+.cr-tide::before { content: ""; position: absolute; width: 38%; aspect-ratio: 1; left: 31%; top: 18%; border-radius: 0 0 46% 46%; background: #3A1F06; box-shadow: 0 0 0 6px #F2E6D3; }
+.cr-bright  { background: linear-gradient(170deg, #C9D3FF, #8EA2FF); color: #0D1A5C; }
+.cr-bright::before { content: "€1,240 saved"; position: absolute; left: 12%; top: 20%; padding: 8px 10px; border-radius: 10px; background: #fff; color: #0D1A5C; font: 500 12px var(--f-mono); letter-spacing: 0; box-shadow: 0 8px 20px -8px rgba(13,26,92,.5); }
+.cr-halcyon { background: radial-gradient(circle at 68% 26%, #F4F1E1 0 12%, transparent 13%), radial-gradient(circle at 74% 22%, #1B2550 0 12%, transparent 13%), #1B2550; color: #E8ECFF; }
+
+@media (max-width: 640px) {
+  .fan { --cw: 150px; --pivot: 760px; --step: 10deg; height: 320px; margin-top: 40px; }
+  .cr { font-size: 16px; padding: 10px; }
+  .sticker { font-size: 10px; right: -10px; }
+  .ad footer { font-size: 9.5px; }
+}
+
+/* ---------- Proof row ---------- */
+.proof { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.proof .wrap { display: grid; grid-template-columns: repeat(3, 1fr); }
+.proof .cell { padding: 34px 28px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.proof .cell + .cell { border-left: 1px solid var(--line); }
+.proof .num { font: 800 2.4rem/1 var(--f-display); letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+.proof p { color: var(--muted); font-size: 15px; }
+@media (max-width: 760px) {
+  .proof .wrap { grid-template-columns: 1fr; }
+  .proof .cell { padding: 24px 4px; }
+  .proof .cell + .cell { border-left: 0; border-top: 1px solid var(--line); }
+}
+
+section.block { padding-block: clamp(72px, 11vw, 128px); scroll-margin-top: 56px; }
+.head { display: grid; gap: 16px; margin-bottom: 44px; }
+
+/* ---------- Preview (dashboard mock) ---------- */
+.dash {
+  background: var(--surface); border-radius: 22px; box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+  overflow: hidden;
+}
+.dash-top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.dash-top .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.dash-top .who .av { width: 36px; height: 36px; font-size: 15px; background: #E3157B; }
+.dash-top .who b { font: 700 18px/1.1 var(--f-display); letter-spacing: -.02em; display: block; overflow-wrap: anywhere; }
+.dash-top .who small { color: var(--muted); font-size: 12.5px; }
+.tabs { display: flex; gap: 4px; margin-left: auto; padding: 4px; border-radius: 999px; background: var(--paper); }
+.tabs span { padding: 6px 12px; border-radius: 999px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.tabs .on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(15,16,19,.12); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+.kpi { padding: 18px 22px; display: grid; gap: 6px; min-width: 0; }
+.kpi + .kpi { border-left: 1px solid var(--line); }
+.kpi strong { font: 700 28px/1 var(--f-display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.kpi em { font: 500 11.5px var(--f-mono); font-style: normal; color: var(--muted); }
+.kpi em.up { color: var(--accent); }
+.dash-body { display: grid; grid-template-columns: 1.45fr 1fr; }
+.dash-body > div { padding: 20px 22px 24px; min-width: 0; }
+.dash-body > div + div { border-left: 1px solid var(--line); display: grid; gap: 28px; align-content: start; }
+.dash h4 { margin: 0 0 14px; font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rows { display: grid; }
+.row { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.thumb { width: 44px; height: 55px; border-radius: 7px; position: relative; overflow: hidden; }
+.thumb.cr-bright::before { display: none; }
+.row .t { min-width: 0; }
+.row .t b { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+.row .t small { color: var(--muted); font: 400 12px var(--f-mono); }
+.days { text-align: right; font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.days span { display: block; font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+.bars { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 5px; height: 116px; }
+.bars i { display: block; background: var(--line); border-radius: 4px 4px 2px 2px; min-height: 4px; }
+.bars i.now { background: var(--accent); }
+.axis { display: flex; justify-content: space-between; margin-top: 8px; font: 400 11px var(--f-mono); color: var(--muted); }
+.hooks { display: grid; gap: 12px; }
+.hook { display: grid; gap: 6px; }
+.hook div { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.hook div span:last-child { font: 500 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 6px; border-radius: 6px; background: var(--paper); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--ink); border-radius: 6px; }
+.sample-note { margin-top: 14px; font: 400 12.5px var(--f-mono); color: var(--muted); text-align: center; }
+@media (max-width: 880px) {
+  .dash-body { grid-template-columns: 1fr; }
+  .dash-body > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .kpi:nth-child(3) { border-left: 0; }
+  .kpi:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .tabs { margin-left: 0; }
+}
+
+/* ---------- Steps ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.step { display: grid; gap: 12px; align-content: start; padding-top: 22px; border-top: 2px solid var(--ink); min-width: 0; }
+.step .n { font: 500 12px var(--f-mono); color: var(--accent); letter-spacing: .06em; }
+.step p { color: var(--muted); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; gap: 32px; } }
+
+/* ---------- Pricing ---------- */
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+.plan {
+  display: grid; grid-template-rows: auto auto 1fr auto; gap: 18px; padding: 28px; border-radius: var(--r);
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); min-width: 0;
+}
+.plan.pro { background: var(--ink); color: var(--paper); box-shadow: var(--shadow); }
+.plan.pro .muted, .plan.pro li { color: color-mix(in srgb, var(--paper) 70%, var(--ink)); }
+.plan.pro .btn { background: var(--paper); color: var(--ink); }
+.plan .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.plan .tag { font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; background: var(--accent); color: #fff; padding: 4px 8px; border-radius: 6px; }
+.price { font: 800 3rem/1 var(--f-display); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.price small { font: 400 14px var(--f-body); letter-spacing: 0; opacity: .7; }
+.muted { color: var(--muted); }
+.plan ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; align-content: start; font-size: 15px; }
+.plan li { display: flex; gap: 10px; color: var(--muted); }
+.plan li::before { content: ""; flex: none; width: 7px; height: 7px; margin-top: .6em; border-radius: 2px; background: var(--accent); }
+.plan .btn { justify-content: space-between; width: 100%; }
+.fine { margin-top: 18px; color: var(--muted); font-size: 14px; text-align: center; }
+@media (max-width: 880px) { .plans { grid-template-columns: 1fr; } }
+
+/* ---------- FAQ ---------- */
+.faq { display: grid; grid-template-columns: 1fr 1.5fr; gap: 48px; }
+.faq .list { min-width: 0; }
+details { border-top: 1px solid var(--line); }
+details:last-child { border-bottom: 1px solid var(--line); }
+summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 16px;
+  padding: 20px 0; font: 600 17px/1.35 var(--f-body);
+}
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; font: 400 22px/1 var(--f-mono); color: var(--muted); transition: rotate .2s; }
+details[open] summary::after { rotate: 45deg; }
+details p { padding-bottom: 20px; color: var(--muted); max-width: 60ch; }
+@media (max-width: 760px) { .faq { grid-template-columns: 1fr; gap: 24px; } }
+
+/* ---------- Final CTA + footer ---------- */
+.final { text-align: center; padding-block: clamp(72px, 11vw, 120px); border-top: 1px solid var(--line); }
+.final h2 { font-size: clamp(2.4rem, 6.4vw, 4.6rem); max-width: 14ch; margin-inline: auto; }
+.final .lede { margin: 18px auto 30px; text-align: center; }
+footer.site { border-top: 1px solid var(--line); }
+footer.site .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-block: 28px; color: var(--muted); font-size: 13.5px; }
+footer.site nav { display: flex; gap: 20px; flex-wrap: wrap; }
+footer.site a { text-decoration: none; }
+footer.site a:hover { color: var(--ink); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 60;
+  max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 12px; background: var(--ink); color: var(--paper);
+  font-size: 14px; box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .ad { animation: none; transition: none; }
+  .btn, .btn .arrow { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Rivl home">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="5" width="15" height="19" rx="4" fill="currentColor"/><rect x="10" y="2" width="15" height="19" rx="4" fill="#FF5B14" transform="rotate(8 17.5 11.5)"/></svg>
+      rivl
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#preview">Product</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn ghost sm" href="#pricing">Log in</a>
+      <a class="btn sm" href="#top">Start free</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <span class="pill"><b>NEW</b> Weekly digest of every new competitor ad</span>
+      <h1>See every <span class="inline-ad" aria-hidden="true"></span> ad your competitors run.</h1>
+      <p class="lede">Type a brand. Rivl pulls their live Meta ads, ranks them by how long they've been running, and shows you the hooks that keep getting budget.</p>
+
+      <form class="search" id="search-form" autocomplete="off">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <label for="competitor" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Competitor brand, Facebook page or website</label>
+        <input id="competitor" name="competitor" type="text" placeholder="Brand name, Facebook page or website" required>
+        <button class="btn" type="submit">Analyze ads <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+      </form>
+      <div class="try"><span>Try a sample:</span>
+        <button type="button" data-try="Lumen Skin">Lumen Skin</button>
+        <button type="button" data-try="Paloma Swim">Paloma Swim</button>
+        <button type="button" data-try="Tidewell Coffee">Tidewell Coffee</button>
+      </div>
+    </div>
+
+    <div class="fan" aria-label="Example competitor ads">
+      <article class="ad" style="--i:-3;--z:1">
+        <header><span class="av" style="background:#3E8A52">M</span><div><b>Mosswell</b><small>Sponsored</small></div></header>
+        <div class="cr cr-moss"><span>Plants that survive you.</span></div>
+        <footer><span>Active 18d</span><span>3 variants</span></footer>
+      </article>
+      <article class="ad" style="--i:-2;--z:2">
+        <header><span class="av" style="background:#FF5B6E">P</span><div><b>Paloma Swim</b><small>Sponsored</small></div></header>
+        <div class="cr cr-paloma"><span>Made for salt.</span></div>
+        <footer><span>Active 64d</span><span>4 variants</span></footer>
+      </article>
+      <article class="ad" style="--i:-1;--z:3">
+        <header><span class="av" style="background:#15171C">F</span><div><b>Ferro Bikes</b><small>Sponsored</small></div></header>
+        <div class="cr cr-ferro"><span>Your commute, minus 20 minutes.</span></div>
+        <footer><span>Active 9d</span><span class="hot">New</span></footer>
+      </article>
+      <article class="ad" style="--i:0;--z:4">
+        <span class="sticker">Running <i>112 days</i></span>
+        <header><span class="av" style="background:#E3157B">L</span><div><b>Lumen Skin</b><small>Sponsored</small></div></header>
+        <div class="cr cr-lumen"><span>Glass skin in 14 days.</span></div>
+        <footer><span class="hot">Active 112d</span><span>9 variants</span></footer>
+      </article>
+      <article class="ad" style="--i:1;--z:3">
+        <header><span class="av" style="background:#B86A00">T</span><div><b>Tidewell Coffee</b><small>Sponsored</small></div></header>
+        <div class="cr cr-tide"><span>Your 6am, sorted.</span></div>
+        <footer><span>Active 41d</span><span>6 variants</span></footer>
+      </article>
+      <article class="ad" style="--i:2;--z:2">
+        <span class="sticker" style="rotate:-5deg;right:auto;left:-16px">Hook: <i>“€1,240 saved”</i></span>
+        <header><span class="av" style="background:#4B5FE0">B</span><div><b>Brightfold</b><small>Sponsored</small></div></header>
+        <div class="cr cr-bright"><span>Money that moves itself.</span></div>
+        <footer><span>Active 27d</span><span>5 variants</span></footer>
+      </article>
+      <article class="ad" style="--i:3;--z:1">
+        <header><span class="av" style="background:#1B2550">H</span><div><b>Halcyon Sleep</b><small>Sponsored</small></div></header>
+        <div class="cr cr-halcyon"><span>Fall asleep in 11 minutes.</span></div>
+        <footer><span>Active 73d</span><span>7 variants</span></footer>
+      </article>
+    </div>
+  </section>
+
+  <section class="proof" aria-label="What Rivl gives you">
+    <div class="wrap">
+      <div class="cell">
+        <span class="eyebrow">Coverage</span>
+        <span class="num">Every live ad</span>
+        <p>Facebook, Instagram, Messenger and Audience Network, pulled straight from Meta's public Ad Library.</p>
+      </div>
+      <div class="cell">
+        <span class="eyebrow">Signal</span>
+        <span class="num">Winners first</span>
+        <p>An ad that's still running after 60 days is one they keep paying for. We sort by that, so you see what works.</p>
+      </div>
+      <div class="cell">
+        <span class="eyebrow">Insight</span>
+        <span class="num">Hooks, decoded</span>
+        <p>Opening lines, offers and angles are grouped across every ad, so patterns jump out in seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="preview">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">The report</span>
+        <h2>One page per competitor. Everything you'd want to steal.</h2>
+        <p class="lede">No spreadsheets, no scrolling the Ad Library for an hour. Open a competitor and you get the picture at a glance.</p>
+      </div>
+
+      <div class="dash" role="img" aria-label="Example Rivl report showing a competitor's active ads, launch cadence and top hooks">
+        <div class="dash-top">
+          <div class="who"><span class="av" id="dash-av">L</span><div><b id="dash-name">Lumen Skin</b><small>facebook.com/lumenskin · tracked since 12 Mar</small></div></div>
+          <div class="tabs"><span class="on">Overview</span><span>All ads</span><span>Hooks</span><span>Landing pages</span></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><span class="eyebrow">Active ads</span><strong>48</strong><em class="up">+7 this week</em></div>
+          <div class="kpi"><span class="eyebrow">Longest running</span><strong>112d</strong><em>since 16 Jun</em></div>
+          <div class="kpi"><span class="eyebrow">Top format</span><strong>Video</strong><em>61% of active ads</em></div>
+          <div class="kpi"><span class="eyebrow">EU reach</span><strong>1.9M</strong><em>last 30 days</em></div>
+        </div>
+        <div class="dash-body">
+          <div>
+            <h4>Longest-running ads</h4>
+            <div class="rows">
+              <div class="row"><span class="thumb cr-lumen"></span><div class="t"><b>“Glass skin in 14 days.”</b><small>Video · FB, IG · 9 variants</small></div><div class="days">112d<span>ACTIVE</span></div></div>
+              <div class="row"><span class="thumb cr-paloma"></span><div class="t"><b>“Dermatologists asked us to stop saying this.”</b><small>UGC video · IG · 4 variants</small></div><div class="days">86d<span>ACTIVE</span></div></div>
+              <div class="row"><span class="thumb cr-bright"></span><div class="t"><b>“Your first serum is on us.”</b><small>Carousel · FB, IG · 6 variants</small></div><div class="days">59d<span>ACTIVE</span></div></div>
+              <div class="row"><span class="thumb cr-moss"></span><div class="t"><b>“3 steps. 2 minutes. Done.”</b><small>Static · IG · 2 variants</small></div><div class="days">31d<span>ACTIVE</span></div></div>
+            </div>
+          </div>
+          <div>
+            <div>
+              <h4>New ads launched per week</h4>
+              <div class="bars" aria-hidden="true">
+                <i style="height:25%"></i><i style="height:38%"></i><i style="height:25%"></i><i style="height:50%"></i>
+                <i style="height:13%"></i><i style="height:63%"></i><i style="height:38%"></i><i style="height:75%"></i>
+                <i style="height:50%"></i><i style="height:38%"></i><i style="height:63%"></i><i class="now" style="height:88%"></i>
+              </div>
+              <div class="axis"><span>14 Jul</span><span>0–8 ads / week</span><span>This week</span></div>
+            </div>
+            <div>
+              <h4>Recurring hooks</h4>
+              <div class="hooks">
+                <div class="hook"><div><span>Before / after results</span><span>42%</span></div><div class="meter"><i style="width:42%"></i></div></div>
+                <div class="hook"><div><span>Free first product</span><span>27%</span></div><div class="meter"><i style="width:27%"></i></div></div>
+                <div class="hook"><div><span>Dermatologist proof</span><span>19%</span></div><div class="meter"><i style="width:19%"></i></div></div>
+                <div class="hook"><div><span>Speed (“in 14 days”)</span><span>12%</span></div><div class="meter"><i style="width:12%"></i></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="sample-note" id="sample-note">Sample report with example data</p>
+    </div>
+  </section>
+
+  <section class="block" id="how" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">How it works</span>
+        <h2>From brand name to battle plan in under a minute.</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="n">STEP 1</span><h3>Add a competitor</h3><p>Paste a brand name, Facebook page or website. Add up to five at once to compare them side by side.</p></div>
+        <div class="step"><span class="n">STEP 2</span><h3>We pull their ads</h3><p>Rivl collects every active and recently stopped ad, with creatives, copy, landing pages and run dates.</p></div>
+        <div class="step"><span class="n">STEP 3</span><h3>Read the report</h3><p>See their longest runners, launch rhythm and recurring hooks. Get a digest every Monday when they ship something new.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="pricing" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Pricing</span>
+        <h2>Start free. Upgrade when you're hooked.</h2>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <div class="top"><h3>Scout</h3></div>
+          <div class="price">€0 <small>/ month</small></div>
+          <ul><li>Track 3 competitors</li><li>Last 30 days of ads</li><li>Longest-running ranking</li></ul>
+          <a class="btn ghost" href="#top">Start free <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <div class="plan pro">
+          <div class="top"><h3>Pro</h3><span class="tag">Most popular</span></div>
+          <div class="price">€39 <small>/ month</small></div>
+          <ul><li>Track 25 competitors</li><li>Full ad history</li><li>Hook and angle analysis</li><li>Monday digest by email</li><li>Export to CSV and PDF</li></ul>
+          <a class="btn" href="#top">Start 14-day trial <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <div class="plan">
+          <div class="top"><h3>Agency</h3></div>
+          <div class="price">€119 <small>/ month</small></div>
+          <ul><li>Track 100 competitors</li><li>Workspaces per client</li><li>Reports with your logo</li><li>5 team seats</li></ul>
+          <a class="btn ghost" href="#top">Start 14-day trial <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <p class="fine">Prices exclude VAT. Cancel any time, no card needed for Scout.</p>
+    </div>
+  </section>
+
+  <section class="block" id="faq" style="padding-top:0">
+    <div class="wrap faq">
+      <div class="head" style="margin:0;align-content:start">
+        <span class="eyebrow">FAQ</span>
+        <h2>Good questions.</h2>
+      </div>
+      <div class="list">
+        <details open><summary>Where does the data come from?</summary><p>From Meta's public Ad Library, the same source anyone can browse by hand. Rivl collects it for you, keeps the history Meta doesn't show, and organises it into a report.</p></details>
+        <details><summary>Do I need to connect my own ad account?</summary><p>No. Rivl only looks at public ads, so there's nothing to connect and no access to your account.</p></details>
+        <details><summary>Can I see how much a competitor spends?</summary><p>Meta only publishes spend for political and social-issue ads. For other ads we show run length, number of variants and EU reach, which together tell you where the budget is going.</p></details>
+        <details><summary>How fresh is the data?</summary><p>Tracked competitors are refreshed every 24 hours. A brand-new search runs live and takes about 30 seconds.</p></details>
+        <details><summary>Which countries are covered?</summary><p>Every country where Meta runs ads. Filter by country to see what a competitor runs in one market versus another.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <h2>Your competitors already tested it. Learn from it.</h2>
+      <p class="lede">Your first report is free and takes less than a minute.</p>
+      <a class="btn" href="#top">Analyze a competitor <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Rivl. Not affiliated with Meta Platforms, Inc.</span>
+    <nav aria-label="Footer"><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#top">Privacy</a><a href="#top">Terms</a></nav>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  var form = document.getElementById('search-form');
+  var input = document.getElementById('competitor');
+  var toast = document.getElementById('toast');
+  var timer;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.hidden = false;
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.hidden = true; }, 3200);
+  }
+
+  // Until the backend exists, a search fills the sample report with the brand name and scrolls to it.
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = input.value.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+    if (!name) return;
+    document.getElementById('dash-name').textContent = name;
+    document.getElementById('dash-av').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('sample-note').textContent = 'Preview for “' + name + '” with example data. Live reports open at launch.';
+    document.getElementById('preview').scrollIntoView({ block: 'start' });
+    showToast('Here’s what a report for ' + name + ' looks like.');
+  });
+
+  document.querySelectorAll('[data-try]').forEach(function (b) {
+    b.addEventListener('click', function () { input.value = b.getAttribute('data-try'); input.focus(); });
+  });
+})();
+</script>
+</body>
+</html>
