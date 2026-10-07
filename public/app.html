@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rivl Search</title>
+<meta name="description" content="Search any brand and see the Meta ads they're running right now.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/rivl.css">
+</head>
+<body class="app">
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Rivl home">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="5" width="15" height="19" rx="4" fill="currentColor"/><rect x="10" y="2" width="15" height="19" rx="4" fill="#FF5B14" transform="rotate(8 17.5 11.5)"/></svg>
+      rivl
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="/#how">How it works</a>
+      <a href="/#pricing">Pricing</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap app-main">
+  <form class="app-search" id="search-form" autocomplete="off">
+    <div class="search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label for="q" class="visually-hidden">Brand name, Facebook page or Ad Library link</label>
+      <input id="q" name="q" type="text" placeholder="Brand name, Facebook page or Ad Library link" required>
+      <label for="country" class="visually-hidden">Country</label>
+      <select id="country" name="country">
+        <option value="ALL">All countries</option>
+        <option value="US">United States</option>
+        <option value="GB">United Kingdom</option>
+        <option value="BE">Belgium</option>
+        <option value="NL">Netherlands</option>
+        <option value="FR">France</option>
+        <option value="DE">Germany</option>
+        <option value="ES">Spain</option>
+        <option value="IT">Italy</option>
+        <option value="CA">Canada</option>
+        <option value="AU">Australia</option>
+      </select>
+      <button class="btn" type="submit" id="go">Analyze <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+    </div>
+  </form>
+
+  <!-- Start: nothing searched yet -->
+  <section id="state-start" class="state">
+    <h1 class="state-title">Whose ads do you want to see?</h1>
+    <p class="lede">Type a brand and Rivl pulls every ad they're running on Facebook and Instagram right now, longest-running first.</p>
+    <div class="try"><span>Try:</span>
+      <a href="?q=Nike">Nike</a><a href="?q=Gymshark">Gymshark</a><a href="?q=Liquid%20Death">Liquid Death</a><a href="?q=Glossier">Glossier</a>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <section id="state-loading" class="state" hidden aria-live="polite">
+    <p class="loading-line"><span class="spinner" aria-hidden="true"></span> <span id="loading-text">Pulling live ads from the Meta Ad Library</span> <span class="mono muted" id="elapsed">0s</span></p>
+    <p class="muted small">Big brands can take up to a minute the first time. After that, results are cached.</p>
+    <div class="grid skeletons" aria-hidden="true">
+      <div class="acard sk"></div><div class="acard sk"></div><div class="acard sk"></div><div class="acard sk"></div>
+    </div>
+  </section>
+
+  <!-- Error -->
+  <section id="state-error" class="state" hidden role="alert">
+    <h2 class="state-title">That search didn't work</h2>
+    <p class="lede" id="error-text"></p>
+    <button class="btn ghost" type="button" id="retry">Try again</button>
+  </section>
+
+  <!-- Results -->
+  <section id="state-results" hidden>
+    <div class="results-head">
+      <div>
+        <span class="eyebrow" id="r-eyebrow">Active ads</span>
+        <h1 class="r-title" id="r-title"></h1>
+        <p class="muted small" id="r-meta"></p>
+      </div>
+    </div>
+
+    <div class="dash r-kpis">
+      <div class="kpis">
+        <div class="kpi"><span class="eyebrow">Active ads</span><strong id="k-total">–</strong><em id="k-total-sub">in this search</em></div>
+        <div class="kpi"><span class="eyebrow">Longest running</span><strong id="k-longest">–</strong><em>still live</em></div>
+        <div class="kpi"><span class="eyebrow">New this week</span><strong id="k-new">–</strong><em class="up">launched in the last 7 days</em></div>
+        <div class="kpi"><span class="eyebrow">Top format</span><strong id="k-format">–</strong><em id="k-format-sub"></em></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="chips" id="page-chips" role="group" aria-label="Filter by Facebook page"></div>
+      <label class="sort"><span class="visually-hidden">Sort ads</span>
+        <select id="sort">
+          <option value="longest">Longest running</option>
+          <option value="newest">Newest first</option>
+          <option value="variants">Most variants</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <p class="muted small empty-filter" id="empty" hidden>No active ads found. Check the spelling, try the brand's exact Facebook page name, or switch the country to All countries.</p>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Data from the public Meta Ad Library. Rivl is not affiliated with Meta Platforms, Inc.</span>
+    <nav aria-label="Footer"><a href="/">Home</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>
+  </div>
+</footer>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>

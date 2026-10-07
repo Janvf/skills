@@ -1,14 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rivl</title>
-<meta name="description" content="Rivl shows every Meta ad your competitors are running, which ones they keep paying for, and the hooks behind them.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
-<style>
 /* Layout: one centred column. The hero ends in a fanned hand of Meta ads (the competitor's "deck"),
    then a calm product walk-through: proof row → live preview → 3 steps → pricing → FAQ. */
 :root {
@@ -46,6 +35,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
@@ -141,11 +131,12 @@ p { margin: 0; }
 }
 .search input::placeholder { color: var(--muted); }
 .try { margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 13.5px; color: var(--muted); }
-.try button {
+.try a {
+  display: inline-block; text-decoration: none;
   font: 500 13px var(--f-body); color: var(--ink); background: transparent; border: 1px dashed var(--line);
   border-radius: 999px; padding: 4px 11px; cursor: pointer;
 }
-.try button:hover { border-style: solid; border-color: var(--ink); }
+.try a:hover { border-style: solid; border-color: var(--ink); }
 @media (max-width: 520px) {
   .search { flex-wrap: wrap; border-radius: 22px; }
   .search .btn { width: 100%; justify-content: space-between; }
@@ -347,273 +338,83 @@ footer.site a:hover { color: var(--ink); }
   .ad { animation: none; transition: none; }
   .btn, .btn .arrow { transition: none; }
 }
-</style>
-</head>
-<body>
 
-<header class="nav">
-  <div class="wrap">
-    <a class="logo" href="#top" aria-label="Rivl home">
-      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="5" width="15" height="19" rx="4" fill="currentColor"/><rect x="10" y="2" width="15" height="19" rx="4" fill="#FF5B14" transform="rotate(8 17.5 11.5)"/></svg>
-      rivl
-    </a>
-    <nav class="nav-links" aria-label="Main">
-      <a href="#preview">Product</a>
-      <a href="#how">How it works</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-    </nav>
-    <div class="nav-cta">
-      <a class="btn ghost sm" href="#pricing">Log in</a>
-      <a class="btn sm" href="#top">Start free</a>
-    </div>
-  </div>
-</header>
+/* ================= App: search results ================= */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mono { font-family: var(--f-mono); }
+.small { font-size: 14px; }
+.app-main { padding-block: 28px 80px; display: grid; gap: 32px; }
+.app-search .search { max-width: none; margin: 0; }
+.app-search select {
+  flex: none; height: 44px; border: 0; border-left: 1px solid var(--line); padding-inline: 12px 8px;
+  background: transparent; color: var(--ink); font: 500 14px var(--f-body); cursor: pointer;
+}
+.btn:disabled { opacity: .55; cursor: progress; transform: none; }
+@media (max-width: 640px) {
+  .app-search .search { flex-wrap: wrap; border-radius: 22px; }
+  .app-search input { flex-basis: calc(100% - 50px); }
+  .app-search select { border-left: 0; flex: 1; }
+}
 
-<main id="top">
-  <section class="hero">
-    <div class="wrap">
-      <span class="pill"><b>NEW</b> Weekly digest of every new competitor ad</span>
-      <h1>See every <span class="inline-ad" aria-hidden="true"></span> ad your competitors run.</h1>
-      <p class="lede">Type a brand. Rivl pulls their live Meta ads, ranks them by how long they've been running, and shows you the hooks that keep getting budget.</p>
+.state { display: grid; gap: 16px; justify-items: start; padding-block: 24px; }
+.state-title { font: 800 clamp(2rem, 5vw, 3.2rem)/1 var(--f-display); letter-spacing: -.04em; }
+.state .try { justify-content: flex-start; margin: 0; }
+.state .grid { justify-self: stretch; }
+.loading-line { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { rotate: 360deg; } }
 
-      <form class="search" id="search-form" autocomplete="off">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <label for="competitor" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Competitor brand, Facebook page or website</label>
-        <input id="competitor" name="competitor" type="text" placeholder="Brand name, Facebook page or website" required>
-        <button class="btn" type="submit">Analyze ads <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
-      </form>
-      <div class="try"><span>Try a sample:</span>
-        <button type="button" data-try="Lumen Skin">Lumen Skin</button>
-        <button type="button" data-try="Paloma Swim">Paloma Swim</button>
-        <button type="button" data-try="Tidewell Coffee">Tidewell Coffee</button>
-      </div>
-    </div>
+.results-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; }
+.results-head > div { display: grid; gap: 10px; min-width: 0; }
+.r-title { font: 800 clamp(2.6rem, 7vw, 4.8rem)/.92 var(--f-display); letter-spacing: -.055em; overflow-wrap: anywhere; }
+.demo-badge { margin-left: 10px; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.r-kpis .kpis { border-bottom: 0; }
 
-    <div class="fan" aria-label="Example competitor ads">
-      <article class="ad" style="--i:-3;--z:1">
-        <header><span class="av" style="background:#3E8A52">M</span><div><b>Mosswell</b><small>Sponsored</small></div></header>
-        <div class="cr cr-moss"><span>Plants that survive you.</span></div>
-        <footer><span>Active 18d</span><span>3 variants</span></footer>
-      </article>
-      <article class="ad" style="--i:-2;--z:2">
-        <header><span class="av" style="background:#FF5B6E">P</span><div><b>Paloma Swim</b><small>Sponsored</small></div></header>
-        <div class="cr cr-paloma"><span>Made for salt.</span></div>
-        <footer><span>Active 64d</span><span>4 variants</span></footer>
-      </article>
-      <article class="ad" style="--i:-1;--z:3">
-        <header><span class="av" style="background:#15171C">F</span><div><b>Ferro Bikes</b><small>Sponsored</small></div></header>
-        <div class="cr cr-ferro"><span>Your commute, minus 20 minutes.</span></div>
-        <footer><span>Active 9d</span><span class="hot">New</span></footer>
-      </article>
-      <article class="ad" style="--i:0;--z:4">
-        <span class="sticker">Running <i>112 days</i></span>
-        <header><span class="av" style="background:#E3157B">L</span><div><b>Lumen Skin</b><small>Sponsored</small></div></header>
-        <div class="cr cr-lumen"><span>Glass skin in 14 days.</span></div>
-        <footer><span class="hot">Active 112d</span><span>9 variants</span></footer>
-      </article>
-      <article class="ad" style="--i:1;--z:3">
-        <header><span class="av" style="background:#B86A00">T</span><div><b>Tidewell Coffee</b><small>Sponsored</small></div></header>
-        <div class="cr cr-tide"><span>Your 6am, sorted.</span></div>
-        <footer><span>Active 41d</span><span>6 variants</span></footer>
-      </article>
-      <article class="ad" style="--i:2;--z:2">
-        <span class="sticker" style="rotate:-5deg;right:auto;left:-16px">Hook: <i>“€1,240 saved”</i></span>
-        <header><span class="av" style="background:#4B5FE0">B</span><div><b>Brightfold</b><small>Sponsored</small></div></header>
-        <div class="cr cr-bright"><span>Money that moves itself.</span></div>
-        <footer><span>Active 27d</span><span>5 variants</span></footer>
-      </article>
-      <article class="ad" style="--i:3;--z:1">
-        <header><span class="av" style="background:#1B2550">H</span><div><b>Halcyon Sleep</b><small>Sponsored</small></div></header>
-        <div class="cr cr-halcyon"><span>Fall asleep in 11 minutes.</span></div>
-        <footer><span>Active 73d</span><span>7 variants</span></footer>
-      </article>
-    </div>
-  </section>
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding-inline: 14px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--f-body); cursor: pointer;
+}
+.chip span { font-size: 12px; color: var(--muted); }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.on span { color: color-mix(in srgb, var(--paper) 70%, var(--ink)); }
+.sort select {
+  height: 36px; padding-inline: 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); font: 500 14px var(--f-body);
+}
 
-  <section class="proof" aria-label="What Rivl gives you">
-    <div class="wrap">
-      <div class="cell">
-        <span class="eyebrow">Coverage</span>
-        <span class="num">Every live ad</span>
-        <p>Facebook, Instagram, Messenger and Audience Network, pulled straight from Meta's public Ad Library.</p>
-      </div>
-      <div class="cell">
-        <span class="eyebrow">Signal</span>
-        <span class="num">Winners first</span>
-        <p>An ad that's still running after 60 days is one they keep paying for. We sort by that, so you see what works.</p>
-      </div>
-      <div class="cell">
-        <span class="eyebrow">Insight</span>
-        <span class="num">Hooks, decoded</span>
-        <p>Opening lines, offers and angles are grouped across every ad, so patterns jump out in seconds.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="preview">
-    <div class="wrap">
-      <div class="head">
-        <span class="eyebrow">The report</span>
-        <h2>One page per competitor. Everything you'd want to steal.</h2>
-        <p class="lede">No spreadsheets, no scrolling the Ad Library for an hour. Open a competitor and you get the picture at a glance.</p>
-      </div>
-
-      <div class="dash" role="img" aria-label="Example Rivl report showing a competitor's active ads, launch cadence and top hooks">
-        <div class="dash-top">
-          <div class="who"><span class="av" id="dash-av">L</span><div><b id="dash-name">Lumen Skin</b><small>facebook.com/lumenskin · tracked since 12 Mar</small></div></div>
-          <div class="tabs"><span class="on">Overview</span><span>All ads</span><span>Hooks</span><span>Landing pages</span></div>
-        </div>
-        <div class="kpis">
-          <div class="kpi"><span class="eyebrow">Active ads</span><strong>48</strong><em class="up">+7 this week</em></div>
-          <div class="kpi"><span class="eyebrow">Longest running</span><strong>112d</strong><em>since 16 Jun</em></div>
-          <div class="kpi"><span class="eyebrow">Top format</span><strong>Video</strong><em>61% of active ads</em></div>
-          <div class="kpi"><span class="eyebrow">EU reach</span><strong>1.9M</strong><em>last 30 days</em></div>
-        </div>
-        <div class="dash-body">
-          <div>
-            <h4>Longest-running ads</h4>
-            <div class="rows">
-              <div class="row"><span class="thumb cr-lumen"></span><div class="t"><b>“Glass skin in 14 days.”</b><small>Video · FB, IG · 9 variants</small></div><div class="days">112d<span>ACTIVE</span></div></div>
-              <div class="row"><span class="thumb cr-paloma"></span><div class="t"><b>“Dermatologists asked us to stop saying this.”</b><small>UGC video · IG · 4 variants</small></div><div class="days">86d<span>ACTIVE</span></div></div>
-              <div class="row"><span class="thumb cr-bright"></span><div class="t"><b>“Your first serum is on us.”</b><small>Carousel · FB, IG · 6 variants</small></div><div class="days">59d<span>ACTIVE</span></div></div>
-              <div class="row"><span class="thumb cr-moss"></span><div class="t"><b>“3 steps. 2 minutes. Done.”</b><small>Static · IG · 2 variants</small></div><div class="days">31d<span>ACTIVE</span></div></div>
-            </div>
-          </div>
-          <div>
-            <div>
-              <h4>New ads launched per week</h4>
-              <div class="bars" aria-hidden="true">
-                <i style="height:25%"></i><i style="height:38%"></i><i style="height:25%"></i><i style="height:50%"></i>
-                <i style="height:13%"></i><i style="height:63%"></i><i style="height:38%"></i><i style="height:75%"></i>
-                <i style="height:50%"></i><i style="height:38%"></i><i style="height:63%"></i><i class="now" style="height:88%"></i>
-              </div>
-              <div class="axis"><span>14 Jul</span><span>0–8 ads / week</span><span>This week</span></div>
-            </div>
-            <div>
-              <h4>Recurring hooks</h4>
-              <div class="hooks">
-                <div class="hook"><div><span>Before / after results</span><span>42%</span></div><div class="meter"><i style="width:42%"></i></div></div>
-                <div class="hook"><div><span>Free first product</span><span>27%</span></div><div class="meter"><i style="width:27%"></i></div></div>
-                <div class="hook"><div><span>Dermatologist proof</span><span>19%</span></div><div class="meter"><i style="width:19%"></i></div></div>
-                <div class="hook"><div><span>Speed (“in 14 days”)</span><span>12%</span></div><div class="meter"><i style="width:12%"></i></div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <p class="sample-note" id="sample-note">Sample report with example data</p>
-    </div>
-  </section>
-
-  <section class="block" id="how" style="padding-top:0">
-    <div class="wrap">
-      <div class="head">
-        <span class="eyebrow">How it works</span>
-        <h2>From brand name to battle plan in under a minute.</h2>
-      </div>
-      <div class="steps">
-        <div class="step"><span class="n">STEP 1</span><h3>Add a competitor</h3><p>Paste a brand name, Facebook page or website. Add up to five at once to compare them side by side.</p></div>
-        <div class="step"><span class="n">STEP 2</span><h3>We pull their ads</h3><p>Rivl collects every active and recently stopped ad, with creatives, copy, landing pages and run dates.</p></div>
-        <div class="step"><span class="n">STEP 3</span><h3>Read the report</h3><p>See their longest runners, launch rhythm and recurring hooks. Get a digest every Monday when they ship something new.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="pricing" style="padding-top:0">
-    <div class="wrap">
-      <div class="head">
-        <span class="eyebrow">Pricing</span>
-        <h2>Start free. Upgrade when you're hooked.</h2>
-      </div>
-      <div class="plans">
-        <div class="plan">
-          <div class="top"><h3>Scout</h3></div>
-          <div class="price">€0 <small>/ month</small></div>
-          <ul><li>Track 3 competitors</li><li>Last 30 days of ads</li><li>Longest-running ranking</li></ul>
-          <a class="btn ghost" href="#top">Start free <span class="arrow" aria-hidden="true">→</span></a>
-        </div>
-        <div class="plan pro">
-          <div class="top"><h3>Pro</h3><span class="tag">Most popular</span></div>
-          <div class="price">€39 <small>/ month</small></div>
-          <ul><li>Track 25 competitors</li><li>Full ad history</li><li>Hook and angle analysis</li><li>Monday digest by email</li><li>Export to CSV and PDF</li></ul>
-          <a class="btn" href="#top">Start 14-day trial <span class="arrow" aria-hidden="true">→</span></a>
-        </div>
-        <div class="plan">
-          <div class="top"><h3>Agency</h3></div>
-          <div class="price">€119 <small>/ month</small></div>
-          <ul><li>Track 100 competitors</li><li>Workspaces per client</li><li>Reports with your logo</li><li>5 team seats</li></ul>
-          <a class="btn ghost" href="#top">Start 14-day trial <span class="arrow" aria-hidden="true">→</span></a>
-        </div>
-      </div>
-      <p class="fine">Prices exclude VAT. Cancel any time, no card needed for Scout.</p>
-    </div>
-  </section>
-
-  <section class="block" id="faq" style="padding-top:0">
-    <div class="wrap faq">
-      <div class="head" style="margin:0;align-content:start">
-        <span class="eyebrow">FAQ</span>
-        <h2>Good questions.</h2>
-      </div>
-      <div class="list">
-        <details open><summary>Where does the data come from?</summary><p>From Meta's public Ad Library, the same source anyone can browse by hand. Rivl collects it for you, keeps the history Meta doesn't show, and organises it into a report.</p></details>
-        <details><summary>Do I need to connect my own ad account?</summary><p>No. Rivl only looks at public ads, so there's nothing to connect and no access to your account.</p></details>
-        <details><summary>Can I see how much a competitor spends?</summary><p>Meta only publishes spend for political and social-issue ads. For other ads we show run length, number of variants and EU reach, which together tell you where the budget is going.</p></details>
-        <details><summary>How fresh is the data?</summary><p>Tracked competitors are refreshed every 24 hours. A brand-new search runs live and takes about 30 seconds.</p></details>
-        <details><summary>Which countries are covered?</summary><p>Every country where Meta runs ads. Filter by country to see what a competitor runs in one market versus another.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <section class="final">
-    <div class="wrap">
-      <h2>Your competitors already tested it. Learn from it.</h2>
-      <p class="lede">Your first report is free and takes less than a minute.</p>
-      <a class="btn" href="#top">Analyze a competitor <span class="arrow" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-    </div>
-  </section>
-</main>
-
-<footer class="site">
-  <div class="wrap">
-    <span>© 2026 Rivl. Not affiliated with Meta Platforms, Inc.</span>
-    <nav aria-label="Footer"><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#top">Privacy</a><a href="#top">Terms</a></nav>
-  </div>
-</footer>
-
-<div class="toast" id="toast" role="status" hidden></div>
-
-<script>
-(function () {
-  var form = document.getElementById('search-form');
-  var input = document.getElementById('competitor');
-  var toast = document.getElementById('toast');
-  var timer;
-
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.hidden = false;
-    clearTimeout(timer);
-    timer = setTimeout(function () { toast.hidden = true; }, 3200);
-  }
-
-  // Until the backend exists, a search fills the sample report with the brand name and scrolls to it.
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var name = input.value.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
-    if (!name) return;
-    document.getElementById('dash-name').textContent = name;
-    document.getElementById('dash-av').textContent = name.charAt(0).toUpperCase();
-    document.getElementById('sample-note').textContent = 'Preview for “' + name + '” with example data. Live reports open at launch.';
-    document.getElementById('preview').scrollIntoView({ block: 'start' });
-    showToast('Here’s what a report for ' + name + ' looks like.');
-  });
-
-  document.querySelectorAll('[data-try]').forEach(function (b) {
-    b.addEventListener('click', function () { input.value = b.getAttribute('data-try'); input.focus(); });
-  });
-})();
-</script>
-</body>
-</html>
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; align-items: start; }
+.acard {
+  position: relative; display: grid; gap: 10px; padding: 12px; border-radius: 16px; min-width: 0;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+}
+.acard .sticker { top: -10px; right: -8px; }
+.acard header { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.acard .av { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--ink); color: var(--paper); }
+.acard .who { min-width: 0; }
+.acard .who b { display: block; font-size: 13.5px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acard .who small { display: block; font-size: 11.5px; color: var(--muted); }
+.media { position: relative; border-radius: 10px; overflow: hidden; background: var(--paper); aspect-ratio: 4 / 5; max-width: 100%; }
+.media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+.media.none { display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 16px; }
+.media .fmt { position: absolute; left: 8px; top: 8px; padding: 3px 7px; border-radius: 6px; background: var(--glass); color: var(--ink); font: 500 11px var(--f-mono); }
+.play {
+  position: absolute; inset: 0; margin: auto; width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--glass); color: var(--ink); font-size: 18px; box-shadow: var(--shadow);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.copy { font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.cta-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border-radius: 10px; background: var(--paper); }
+.cta-title { font-size: 13px; font-weight: 600; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.cta-btn { flex: none; padding: 6px 10px; border-radius: 7px; background: var(--line); font-size: 12px; font-weight: 600; }
+.acard footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font: 500 11.5px var(--f-mono); color: var(--muted); padding-top: 2px; }
+.acard footer .hot { color: var(--accent); }
+.acard footer .new { margin-left: 6px; padding: 1px 5px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
+.acard footer a { color: var(--ink); text-decoration: none; }
+.acard footer a:hover { text-decoration: underline; }
+.sk { height: 460px; background: linear-gradient(100deg, var(--surface) 40%, var(--paper) 50%, var(--surface) 60%) 0 0 / 300% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -150% 0; } }
+.empty-filter { text-align: center; }
+@media (prefers-reduced-motion: reduce) { .spinner, .sk { animation: none; } }
+#state-results { display: grid; gap: 22px; }

@@ -1,0 +1,12 @@
+{
+  "name": "rivl",
+  "private": true,
+  "type": "module",
+  "description": "Competitor analysis for Meta ads",
+  "engines": { "node": ">=18.17" },
+  "scripts": {
+    "dev": "node server.js",
+    "dev:mock": "RIVL_MOCK=1 node server.js",
+    "test": "node --test"
+  }
+}
