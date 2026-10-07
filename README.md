@@ -25,6 +25,8 @@ npm run dev:mock            # demo data, no Apify calls
 npm test
 ```
 
+Behind a corporate or sandbox HTTPS proxy, start Node with `NODE_USE_ENV_PROXY=1` (Node 22.21+) so `fetch` uses `HTTPS_PROXY`.
+
 ## Deploy (Vercel)
 
 1. Import the repo in Vercel. No framework, no build command.
@@ -32,6 +34,8 @@ npm test
 3. Deploy. `vercel.json` serves `public/` and gives the API function up to 120 s, which a big brand's first search can need.
 
 ## Data source
+
+A keyword search (`?q=nike`) returns every advertiser whose ads mention the word, so the page preselects the best-matching Facebook page and offers a page report (`?q=Nike&page=<page id>`) with only that page's ads.
 
 Ads come from the public Meta Ad Library through the Apify actor `apify/facebook-ads-scraper` (override with `APIFY_ACTOR`). Each search costs roughly $0.20 per 60 ads at Apify's listed rates. Results are cached in memory per server instance for 6 hours; move this to a database (e.g. Supabase) before launch so repeat searches stay free and history builds up.
 

@@ -396,8 +396,9 @@ footer.site a:hover { color: var(--ink); }
 .acard .who b { display: block; font-size: 13.5px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acard .who small { display: block; font-size: 11.5px; color: var(--muted); }
 .media { position: relative; border-radius: 10px; overflow: hidden; background: var(--paper); aspect-ratio: 4 / 5; max-width: 100%; }
-.media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
-.media.none { display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 16px; }
+.media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--paper); }
+.media.none { display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 16px; text-decoration: none; border: 1px dashed var(--line); }
+.media.none:hover { color: var(--ink); }
 .media .fmt { position: absolute; left: 8px; top: 8px; padding: 3px 7px; border-radius: 6px; background: var(--glass); color: var(--ink); font: 500 11px var(--f-mono); }
 .play {
   position: absolute; inset: 0; margin: auto; width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer;
@@ -418,3 +419,8 @@ footer.site a:hover { color: var(--ink); }
 .empty-filter { text-align: center; }
 @media (prefers-reduced-motion: reduce) { .spinner, .sk { animation: none; } }
 #state-results { display: grid; gap: 22px; }
+.scope {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;
+  padding: 14px 14px 14px 18px; border-radius: 14px; background: var(--accent-soft); color: var(--ink);
+}
+.scope p { min-width: 0; font-size: 15px; }

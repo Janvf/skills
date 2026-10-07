@@ -61,7 +61,7 @@
   <!-- Loading -->
   <section id="state-loading" class="state" hidden aria-live="polite">
     <p class="loading-line"><span class="spinner" aria-hidden="true"></span> <span id="loading-text">Pulling live ads from the Meta Ad Library</span> <span class="mono muted" id="elapsed">0s</span></p>
-    <p class="muted small">Big brands can take up to a minute the first time. After that, results are cached.</p>
+    <p class="muted small">Big brands can take 1 to 2 minutes the first time. After that, results are cached.</p>
     <div class="grid skeletons" aria-hidden="true">
       <div class="acard sk"></div><div class="acard sk"></div><div class="acard sk"></div><div class="acard sk"></div>
     </div>
@@ -82,6 +82,11 @@
         <h1 class="r-title" id="r-title"></h1>
         <p class="muted small" id="r-meta"></p>
       </div>
+    </div>
+
+    <div class="scope" id="scope" hidden>
+      <p id="scope-text"></p>
+      <button class="btn sm" type="button" id="scope-btn"></button>
     </div>
 
     <div class="dash r-kpis">

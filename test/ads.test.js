@@ -99,3 +99,32 @@ test('reports a missing token clearly', async () => {
   await assert.rejects(searchAds({ q: 'token-check' }), /APIFY_TOKEN/);
   if (saved) process.env.APIFY_TOKEN = saved;
 });
+
+// Trimmed from a real Nike catalog ad returned by the actor (Oct 2026).
+test('handles a real catalog ad with null collation fields', () => {
+  const ad = normalizeAd({
+    adArchiveID: '1', pageID: '15087023444', pageName: 'Nike', isActive: true,
+    startDate: Date.parse('2026-09-01T07:00:00Z') / 1000, endDate: null,
+    collationCount: null, collationId: null, publisherPlatform: ['FACEBOOK', 'INSTAGRAM'],
+    snapshot: {
+      body: { text: '{{product.brand}}' }, displayFormat: 'DPA', images: [], videos: [],
+      pageProfilePictureUrl: 'https://scontent.example/p.jpg',
+      cards: [{ body: 'Run through summer with gear that can take the heat.', title: 'Nike Air Monarch IV ', ctaText: 'Shop Now', linkUrl: 'https://www.nike.com/t/x', originalImageUrl: 'https://scontent.example/c.jpg', videoHdUrl: null, videoSdUrl: null }],
+    },
+  }, NOW);
+  assert.equal(ad.variants, 1);
+  assert.equal(ad.daysRunning, 36);
+  assert.equal(ad.format, 'Catalog');
+  assert.equal(ad.title, 'Nike Air Monarch IV');
+  assert.equal(ad.cta, 'Shop Now');
+  assert.equal(ad.image, 'https://scontent.example/c.jpg');
+  assert.equal(ad.video, null);
+});
+
+test('builds a page-only URL when a page id is given', () => {
+  const url = new URL(buildStartUrl('Nike', 'ALL', '15087023444'));
+  assert.equal(url.searchParams.get('view_all_page_id'), '15087023444');
+  assert.equal(url.searchParams.get('search_type'), 'page');
+  assert.equal(url.searchParams.get('is_targeted_country'), 'false');
+  assert.equal(url.searchParams.get('q'), null);
+});

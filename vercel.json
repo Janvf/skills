@@ -1,4 +1,4 @@
 {
   "outputDirectory": "public",
-  "functions": { "api/ads.js": { "maxDuration": 120 } }
+  "functions": { "api/ads.js": { "maxDuration": 180 } }
 }

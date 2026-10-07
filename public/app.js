@@ -32,10 +32,10 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function readParams() {
   const p = new URLSearchParams(location.search);
-  return { q: (p.get('q') || '').trim(), country: (p.get('country') || 'ALL').toUpperCase() };
+  return { q: (p.get('q') || '').trim(), country: (p.get('country') || 'ALL').toUpperCase(), page: p.get('page') || '' };
 }
 
-async function search({ q, country }) {
+async function search({ q, country, page = '' }) {
   $('q').value = q;
   $('country').value = [...$('country').options].some((o) => o.value === country) ? country : 'ALL';
   if (!q) return show('start');
@@ -51,11 +51,12 @@ async function search({ q, country }) {
   timer = setInterval(() => { $('elapsed').textContent = `${Math.round((Date.now() - t0) / 1000)}s`; }, 1000);
 
   try {
-    const res = await fetch(`/api/ads?${new URLSearchParams({ q, country })}`, { signal: current.signal });
+    const res = await fetch(`/api/ads?${new URLSearchParams(page ? { q, country, page } : { q, country })}`, { signal: current.signal });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || `The server answered ${res.status}.`);
     data = body;
-    pageFilter = null;
+    // A keyword search also matches resellers; start on the page that is most likely the brand itself.
+    pageFilter = body.pageId ? null : bestPage(body.pages, q)?.name ?? null;
     render();
     show('results');
   } catch (err) {
@@ -70,13 +71,54 @@ async function search({ q, country }) {
   }
 }
 
+const simplify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function bestPage(pages, q) {
+  const want = simplify(q);
+  if (!want) return null;
+  const score = (p) => {
+    const n = simplify(p.name);
+    if (n === want) return 3;
+    if (n.startsWith(want)) return 2;
+    return n.includes(want) ? 1 : 0;
+  };
+  return pages.map((p) => ({ p, s: score(p) })).filter((x) => x.s > 0)
+    .sort((a, b) => b.s - a.s || b.p.ads - a.p.ads)[0]?.p ?? null;
+}
+
+function go(params) {
+  const clean = Object.fromEntries(Object.entries(params).filter(([k, v]) => v && !(k === 'country' && v === 'ALL')));
+  history.pushState(null, '', `?${new URLSearchParams(clean)}`);
+  search(params);
+}
+
+function renderScope() {
+  const scope = $('scope');
+  const btn = $('scope-btn');
+  if (data.pageId) {
+    const name = data.pages[0]?.name || data.query;
+    $('scope-text').textContent = `Every active ad from the ${name} Facebook page.`;
+    btn.textContent = `Show all advertisers mentioning “${data.query}”`;
+    btn.onclick = () => go({ q: data.query, country: data.country });
+    scope.hidden = false;
+    return;
+  }
+  const best = bestPage(data.pages, data.query);
+  if (!best?.id) { scope.hidden = true; return; }
+  $('scope-text').textContent = `These are ads that mention “${data.query}”, from ${plural(data.pages.length, 'page')}. Want only ${best.name}'s own ads?`;
+  btn.textContent = `Load all ${best.name} ads`;
+  btn.onclick = () => go({ q: best.name, country: data.country, page: best.id });
+  scope.hidden = false;
+}
+
 function render() {
   const { stats, pages, query, country, mock, cached, fetchedAt } = data;
-  $('r-title').textContent = query;
+  $('r-title').textContent = data.pageId ? pages[0]?.name || query : query;
   const where = country === 'ALL' ? 'all countries' : $('country').selectedOptions[0]?.textContent || country;
   const when = new Date(fetchedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   $('r-meta').textContent = `${plural(stats.total, 'active ad')} from ${plural(pages.length, 'page')} · ${where} · fetched ${when}${cached ? ' (cached)' : ''}`;
-  $('r-eyebrow').replaceChildren('Active ads', mock ? h('span', { class: 'demo-badge' }, 'Demo data') : '');
+  renderScope();
+  $('r-eyebrow').replaceChildren(data.pageId ? 'Page report' : 'Keyword search', mock ? h('span', { class: 'demo-badge' }, 'Demo data') : '');
 
   $('k-total').textContent = stats.total;
   $('k-longest').textContent = stats.longestDays ? `${stats.longestDays}d` : '–';
@@ -143,6 +185,12 @@ function card(ad) {
   );
 }
 
+// Meta's media links expire after a while; fall back to a link instead of a broken image.
+function noPreview(ad) {
+  return h('a', { class: 'media none', href: ad.libraryUrl, target: '_blank', rel: 'noopener' }, 'Preview unavailable. Open in Ad Library ↗');
+}
+const onImgError = (ad) => (e) => e.target.closest('.media')?.replaceWith(noPreview(ad));
+
 function media(ad) {
   const poster = safeUrl(ad.video?.poster) || safeUrl(ad.image);
   const src = safeUrl(ad.video?.src);
@@ -152,15 +200,15 @@ function media(ad) {
       type: 'button', class: 'play', 'aria-label': 'Play video',
       onclick: () => box.replaceChildren(h('video', { src, poster, controls: true, autoplay: true, playsinline: true, referrerpolicy: 'no-referrer' })),
     }, h('span', { 'aria-hidden': 'true' }, '▶'));
-    box.append(poster ? h('img', { src: poster, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : '', play);
+    box.append(poster ? h('img', { src: poster, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer', onerror: (e) => e.target.remove() }) : '', play);
     return box;
   }
   if (poster) {
     return h('div', { class: 'media' },
-      h('img', { src: poster, alt: ad.title || `${ad.pageName} ad`, loading: 'lazy', referrerpolicy: 'no-referrer' }),
-      ad.format === 'Video' ? h('span', { class: 'fmt' }, 'Video') : ad.format === 'Carousel' ? h('span', { class: 'fmt' }, 'Carousel') : null);
+      h('img', { src: poster, alt: ad.title || `${ad.pageName} ad`, loading: 'lazy', referrerpolicy: 'no-referrer', onerror: onImgError(ad) }),
+      ad.format !== 'Image' ? h('span', { class: 'fmt' }, ad.format) : null);
   }
-  return h('div', { class: 'media none' }, h('span', {}, 'No preview. Open in Ad Library'));
+  return noPreview(ad);
 }
 
 $('search-form').addEventListener('submit', (e) => {
@@ -168,8 +216,7 @@ $('search-form').addEventListener('submit', (e) => {
   const q = $('q').value.trim();
   if (!q) return;
   const country = $('country').value;
-  history.pushState(null, '', `?${new URLSearchParams(country === 'ALL' ? { q } : { q, country })}`);
-  search({ q, country });
+  go({ q, country });
 });
 $('sort').addEventListener('change', () => data && renderGrid());
 $('retry').addEventListener('click', () => search(readParams()));
